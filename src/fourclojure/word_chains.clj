@@ -31,7 +31,6 @@
                   (cond (not b) path
                         (close-enough? a b) (recur (rest p))
                         :else false))))
-
             (traverse [graph seen head]
               {:pre [(map? graph) (vector? seen) (string? head)]}
               (let [seen (conj seen head)
@@ -43,11 +42,3 @@
             (chains [g] (filter #(= (count (keys g)) (count %)) (traversals g)))
             (has-chain? [words] (if (seq (chains (graph words))) true false))]
       (has-chain? words))))
-
-
-
-
-
-
-
-
