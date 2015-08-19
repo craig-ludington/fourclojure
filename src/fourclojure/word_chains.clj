@@ -17,23 +17,12 @@
          (zero? len-t) len-s
          :else (min (+ (distance s (dec len-s) t len-t)        1)
                     (+ (distance s len-s       t (dec len-t))  1)
-                    (+ (distance s (dec len-s) t (dec len-t))  (if (= (nth s (dec len-s))
-                                                                      (nth t (dec len-t)))
-                                                                 0
-                                                                 1)))))
+                    (+ (distance s (dec len-s) t (dec len-t))  (if (= (nth s (dec len-s)) (nth t (dec len-t))) 0 1)))))
   ([s t] (distance s (count s) t (count t))))
 
 (defn close-enough? [xs ys] (= 1 (distance xs ys)))
 
 (defn graph [xs] (reduce into {} (map (fn [x] {x (set (filter (partial close-enough? x) xs))}) xs)))
-
-(defn chain?
-  [path]
-  (loop [p path]
-    (let [[a b] p]
-      (cond (not b) path
-            (close-enough? a b) (recur (rest p))
-            :else false))))
 
 (defn traverse
   [graph seen head]
