@@ -24,17 +24,24 @@
 
 (defn graph [xs] (reduce into {} (map (fn [x] {x (set (filter (partial close-enough? x) xs))}) xs)))
 
-(defn traverse
-  [graph seen head]
-  {:pre [(map? graph) (vector? seen) (string? head)]}
-  (let [seen (conj seen head)
-        candidates (remove (set seen) (graph head))]
-    (if (empty? candidates)
-      seen
-      (traverse graph seen (first candidates)))))
+(defn depth-first-traversal
+  [graph start]
+  (loop [result  [start]
+         visited #{start}
+         stack   (list start)]
+    (if (empty? stack)
+      result
+      (let [next (first (sort (remove visited (graph (peek stack)))))]
+        (if next
+          (recur (conj result next) (conj visited next) (conj stack next))
+          result ;; Stop at first dead end -- don't pop the stack to visit everything (recur result visited (pop stack))
+          )))))
 
-(defn traversals [g] (map (partial traverse g []) (keys g)))
-
-(defn chains [g] (filter #(= (count (keys g)) (count %)) (traversals g)))
-
-(defn has-chain? [words] (if (seq (chains (graph words))) true false))
+(defn has-chain?
+  [words]
+  (let [g (graph words)
+        wc (count words)
+        pass #(= wc (count (depth-first-traversal g %)))]
+    (if (some pass words)
+      true
+      false)))
