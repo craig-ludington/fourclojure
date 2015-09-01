@@ -30,23 +30,17 @@
 (def __
   (fn
     [string-s string-t]
-    (letfn [(lookup [v2d s t]
-              ;; (println "lookup" v2d s t)
-              ((v2d t) s))
-            (value [v2d s t]
-              (cond (zero? s) t
-                    (zero? t) s
-                    :else     (if (= (nth string-s (dec s)) (nth string-t (dec t)))
-                                (lookup v2d (dec s) (dec t))
-                                (let [del (lookup v2d (dec s) t)
-                                      ins (lookup v2d s (dec t))
-                                      sub (lookup v2d (dec s) (dec t))
-                                      ]
-                                  (inc (min del ins sub))))))]
-
+    (letfn [(lookup [v2d s t] ((v2d t) s))
+            (value [v2d s t] (cond (zero? s) t
+                                   (zero? t) s
+                                   :else     (if (= (nth string-s (dec s)) (nth string-t (dec t)))
+                                               (lookup v2d (dec s) (dec t))
+                                               (let [del (lookup v2d (dec s) t)
+                                                     ins (lookup v2d s (dec t))
+                                                     sub (lookup v2d (dec s) (dec t))]
+                                                 (inc (min del ins sub))))))]
       (let [count-s (count string-s)
             count-t (count string-t)]
-
         (loop [t 0 outer []]
           (if (> t count-t)
             (last (last outer))
@@ -56,5 +50,4 @@
                            (if (> s count-s)
                              inner
                              (recur (inc s)
-                                    (conj inner (value (conj outer inner) s t))))
-                           )))))))))
+                                    (conj inner (value (conj outer inner) s t)))))))))))))
