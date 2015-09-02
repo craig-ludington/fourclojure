@@ -29,7 +29,7 @@
 
 (defn best-increasing-subseq
   [s]
-  (or (first (filter #(> (count %) 1) (all-increasing-subseqs s)))
+  (or (first (filter #(> (count %) 1) (reverse (sort-by count (all-increasing-subseqs s)))))
       []))
 
 (def __ best-increasing-subseq)
