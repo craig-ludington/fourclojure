@@ -29,8 +29,17 @@
 
 (defn best-increasing-subseq
   [s]
-  (or (first (filter #(> (count %) 1) (reverse (sort-by count (all-increasing-subseqs s)))))
-      []))
+  (loop [qualifiers (all-increasing-subseqs s)
+         best nil]
+    (if (seq qualifiers)
+      (recur (rest qualifiers)
+             (if (> (count (first qualifiers))
+                    (count best))
+               (first qualifiers)
+               best))
+      (if (> (count best) 1)
+        best
+        []))))
 
 (def __ best-increasing-subseq)
 
