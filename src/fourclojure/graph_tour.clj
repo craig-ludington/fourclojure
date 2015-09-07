@@ -37,10 +37,9 @@
                   (let [next (first (sort (remove visited (graph (peek stack)))))]
                     (if next
                       (recur (conj result next) (conj visited next) (conj stack next))
-                      ;; (recur result visited (pop stack))
                       result
                       )))))
-            (has-chain?
+            (connected?
               []
               (let [g (make-graph set-of-tuples)
                     vertices (reduce into #{} set-of-tuples)
@@ -48,10 +47,11 @@
                     paths (map #(depth-first-traversal g %)
                                (map first set-of-tuples))
                     pass #(= num (count %))]
-                (if (some pass paths)
-                  true
-                  false)
-                ))]
-      (if (every? #(= 1 %) (map count (vals (group-by identity set-of-tuples))))
-          (has-chain?)
-          false))))
+                (some pass paths)))
+            (degree-ok? []
+              (let [num-odd (count (filter odd? (map count (vals (group-by identity (reduce into [] set-of-tuples))))))]
+                (or (zero? num-odd)
+                    (= 2 num-odd))))]
+      (if (and (degree-ok?) (connected?))
+        true
+        false))))
