@@ -52,4 +52,6 @@
                   true
                   false)
                 ))]
-      (has-chain?))))
+      (if (every? #(= 1 %) (map count (vals (group-by identity set-of-tuples))))
+          (has-chain?)
+          false))))
