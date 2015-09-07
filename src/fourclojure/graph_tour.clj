@@ -16,7 +16,7 @@
 
 
 (def __
-  (fn [set-of-tuples]
+  (fn [tuples]
     (letfn [(make-graph [ts]
               (loop [m {}
                      ts ts]
@@ -41,15 +41,15 @@
                       )))))
             (connected?
               []
-              (let [g (make-graph set-of-tuples)
-                    vertices (reduce into #{} set-of-tuples)
+              (let [g (make-graph tuples)
+                    vertices (reduce into #{} tuples)
                     num (count vertices)
                     paths (map #(depth-first-traversal g %)
-                               (map first set-of-tuples))
+                               (map first tuples))
                     pass #(= num (count %))]
                 (some pass paths)))
             (degree-ok? []
-              (let [num-odd (count (filter odd? (map count (vals (group-by identity (reduce into [] set-of-tuples))))))]
+              (let [num-odd (count (filter odd? (map count (vals (group-by identity (reduce into [] tuples))))))]
                 (or (zero? num-odd)
                     (= 2 num-odd))))]
       (if (and (degree-ok?) (connected?))
