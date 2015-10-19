@@ -23,16 +23,6 @@
   (vec (into #{} (cond (zero? n) [2]
                        (odd? n)  [(+ 2 n) (* 2 n)]
                        :else     [(+ 2 n) (* 2 n) (/ n 2)]))))
-(comment
-  (update-for-frontier-node 4           ;; start node
-                            1           ;; i
-                            {4 0}       ;; level
-                            {4 :none}   ;; parents
-                            adjacency)) ;; function
-;; [[6 2 8]
-;;  {8 1, 2 1, 6 1, 4 0}
-;;  {8 4, 2 4, 6 4, 4 :none}]
-
 (defn update-for-frontier-node
   [node i level parents adj]
   (loop [nodes   (adj node)
@@ -45,17 +35,6 @@
           (recur (rest nodes) next level parents)
           (recur (rest nodes) (conj next n) (assoc level n i) (assoc parents n node))))
       [next level parents])))
-
-(comment
-  (update-for-frontier 1           ;; i
-                       [4]         ;; frontier
-                       {4 0}       ;; level
-                       {4 :none}   ;; parents
-                       adjacency)) ;; function
-;;
-;; [[6 2 8]                    ;; new frontier
-;;  {4 0, 8 1, 2 1, 6 1}       ;; new level
-;;  {4 :none, 8 4, 2 4, 6 4}]  ;; new parents
 
 (defn update-for-frontier
   [i frontier level parents adj]
@@ -73,21 +52,19 @@
       [next level parents])))
 
 (defn bfs
-  [s adj]
+  [s goal adj]
   (loop [i        1
          level    {s 0}
          parent   {s :none}
          frontier [s]]
-    (if (and (seq frontier)
-             (< i 3))
-      (let [[new-frontier new-level new-parent] (update-for-frontier i frontier level parent adj)]
-        (recur (inc i)
-               new-level
-               new-parent
-               new-frontier))
-      {:level level :parent parent})))
-
-
+    (cond (> i 10)       (throw (Throwable. "Too many iterations"))
+          (level goal)   (inc (level goal))
+          (seq frontier) (let [[new-frontier new-level new-parent] (update-for-frontier i frontier level parent adj)]
+                           (recur (inc i)
+                                  new-level
+                                  new-parent
+                                  new-frontier))
+          :else          (throw (Throwable. "Logic error")))))
 
 (= 1 (__ 1 1))  ; 1
 (= 3 (__ 3 12)) ; 3 6 12
@@ -95,3 +72,25 @@
 (= 3 (__ 5 9))  ; 5 7 9
 (= 9 (__ 9 2))  ; 9 18 20 10 12 6 8 4 2
 (= 5 (__ 9 12)) ; 9 11 22 24 12
+
+(comment
+  (update-for-frontier-node 4           ;; start node
+                            1           ;; i
+                            {4 0}       ;; level
+                            {4 :none}   ;; parents
+                            adjacency)) ;; function
+;; [[6 2 8]
+;;  {8 1, 2 1, 6 1, 4 0}
+;;  {8 4, 2 4, 6 4, 4 :none}]
+
+(comment
+  (update-for-frontier 1           ;; i
+                       [4]         ;; frontier
+                       {4 0}       ;; level
+                       {4 :none}   ;; parents
+                       adjacency)) ;; function
+;;
+;; [[6 2 8]                    ;; new frontier
+;;  {4 0, 8 1, 2 1, 6 1}       ;; new level
+;;  {4 :none, 8 4, 2 4, 6 4}]  ;; new parents
+
