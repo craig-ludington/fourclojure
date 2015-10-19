@@ -17,9 +17,9 @@
   (fn [start end]
     (letfn [(adjacency ;; Nodes reachable in one step from node n.
               [n]
-              (vec (into #{} (cond (zero? n) [2]
-                                   (odd? n)  [(+ 2 n) (* 2 n)]
-                                   :else     [(+ 2 n) (* 2 n) (/ n 2)]))))
+              (cond (zero? n) [2]
+                    (odd? n)  [(+ 2 n) (* 2 n)]
+                    :else     [(+ 2 n) (* 2 n) (/ n 2)]))
             (update-for-frontier-node ;; Return next nodes and updated level and parent maps for one node on the frontier.
               [node i level parents adj]
               (loop [nodes   (adj node)
@@ -52,12 +52,10 @@
                      level    {s 0}
                      parent   {s :none}
                      frontier [s]]
-                (cond (> i 10)       (throw (Throwable. "Too many iterations"))
-                      (level goal)   (inc (level goal))
+                (cond (level goal)   (inc (level goal))
                       (seq frontier) (let [[new-frontier new-level new-parent] (update-for-frontier i frontier level parent adj)]
                                        (recur (inc i)
                                               new-level
                                               new-parent
-                                              new-frontier))
-                      :else          (throw (Throwable. "Logic error")))))]
+                                              new-frontier)))))]
       (bfs start end adjacency))))
