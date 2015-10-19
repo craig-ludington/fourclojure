@@ -35,16 +35,15 @@
 
 (defn update-for-frontier-node
   [node i level parents adj]
-  (loop [nodes   (filter #(not (level %)) (adj node))
+  (loop [nodes   (adj node)
          next    []
          level   level
          parents parents]
     (if (seq nodes)
       (let [n (first nodes)]
-        (recur (rest nodes)
-               (conj next n)
-               (assoc level n i)
-               (assoc parents n node)))
+        (if (level n)
+          (recur (rest nodes) next level parents)
+          (recur (rest nodes) (conj next n) (assoc level n i) (assoc parents n node))))
       [next level parents])))
 
 (comment
@@ -81,10 +80,10 @@
          frontier [s]]
     (if (and (seq frontier)
              (< i 3))
-      (let [[new-frontier new-level new-parents] (update-for-frontier i frontier level parent adj)]
+      (let [[new-frontier new-level new-parent] (update-for-frontier i frontier level parent adj)]
         (recur (inc i)
                new-level
-               new-parents
+               new-parent
                new-frontier))
       {:level level :parent parent})))
 
