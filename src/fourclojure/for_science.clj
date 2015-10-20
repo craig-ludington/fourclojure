@@ -104,8 +104,12 @@
                                                           [(inc row) col]
                                                           [row       (inc col)]])))
                        []))]
-    (reduce into {}
-            (for [row (range n-row) col (range n-col)]
-              (let [c (xy row col)]
-                {[row col] (adjacents row col)})))))
+    (into {} (filter (fn [[k v]] (seq v))
+                     (reduce into {}
+                             (for [row (range n-row) col (range n-col)]
+                               (let [c (xy row col)
+                                     m {[row col] (adjacents row col)}]
+                                 (cond (= c \M) (assoc m :mouse [row col])
+                                       (= c \C) (assoc m :cheese [row col])
+                                       :else m))))))))
 
