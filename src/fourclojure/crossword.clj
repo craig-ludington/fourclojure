@@ -25,6 +25,34 @@
 
 
 (def __ 
-  (fn []
-    (letfn []
-)))
+  (fn [word board]
+    (letfn [(rows
+              [b]
+              (map #(remove (partial = \space) %) b))
+            (columns
+              [b]
+              (remove empty? (for [col (range (count (first b)))]
+                               (remove (partial = \space) (map #(nth % col) b)))))
+            (available
+              [b]
+              (reduce into []
+                      (map #(clojure.string/split % #"#")
+                           (map #(apply str %)
+                                (into (rows b) (columns b))))))
+            (fits?
+              [place s]
+              (let [cp (count place)
+                    cs (count s)]
+                (and (= cp cs) (every? true? (for [x (range cp)]
+                                               (let [p (nth place x)
+                                                     s (nth s x)]
+                                                 (or (= p \_) (= p s))))))))
+            (can-play?
+              [s board]
+              (or (some true? (map #(fits? % s) (available board))) false))]
+      (can-play? word board))))
+
+
+
+
+
