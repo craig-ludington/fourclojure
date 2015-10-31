@@ -47,7 +47,6 @@
   (loop [p (drop 1 (path xy direction))
          r []]
     (when-let [v (and (seq p) (get-in board (first p)))]
-      (println (first p) v)
       (condp = v
         color [xy (set r)]
         'e    nil
@@ -55,9 +54,20 @@
 
 (defn explore-8
   [board xy color]
-  (map #(explore board xy % color) [n s e w ne nw se sw]))
+  (reduce into []
+          (filter #(not (empty? (second %)))
+                  (map #(explore board xy % color) [n s e w ne nw se sw]))))
 
 (defn empty-squares [b] (let [r (range (count b))] (for [x r, y r :when (= 'e (get-in b [x y]))] [x y])))
+
+(defn solve
+  [board color]
+  (let [v (partition 2 (reduce into [] (remove empty? (map #(explore-8 board % color) (empty-squares board)))))
+        ks (map first v)
+        vs (map second v)]
+    (zipmap ks vs)))
+
+(def __ solve)
 
 ;; for each empty square, explore in all 8 directions
 
