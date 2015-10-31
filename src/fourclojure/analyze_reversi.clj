@@ -30,10 +30,10 @@
 (defn s  [[x y]] [(inc x) y])
 (defn e  [[x y]] [x (inc y)])
 (defn w  [[x y]] [x (dec y)])
-(defn ne [[x y]] (comp n e))
-(defn nw [[x y]] (comp n w))
-(defn se [[x y]] (comp s e))
-(defn sw [[x y]] (comp s w))
+(def ne (comp n e))
+(def nw (comp n w))
+(def se (comp s e))
+(def sw (comp s w))
 
 (defn path
   "A lazy seq of coordinates starting at [x y] in direction (n, s, e, w, ne, nw, se, sw)."
@@ -53,7 +53,13 @@
         'e    nil
         (recur (next p) (conj r (first p)))))))
 
+(defn explore-8
+  [board xy color]
+  (map #(explore board xy % color) [n s e w ne nw se sw]))
+
 (defn empty-squares [b] (let [r (range (count b))] (for [x r, y r :when (= 'e (get-in b [x y]))] [x y])))
+
+;; for each empty square, explore in all 8 directions
 
 
 (def sample '[[e e e e]
