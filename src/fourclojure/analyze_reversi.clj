@@ -22,18 +22,42 @@
        )
       )))
 
-(def x '[[e e e e]
-         [e w b e]
-         [e b w e]
-         [e e e e]])
-
-(defn empty-squares [b] (let [r (range (count b))] (for [x r, y r :when (= 'e (get-in b [x y]))] [x y])))
-
-(defn adjacent-squares
+(defn adjacent-squares ;; example of a cartesian product 
   [[x y]]
   (remove #(= % [x y]) (mapcat (fn [x] (map (fn [y] [x y]) [(dec y) y (inc y)])) [(dec x) x (inc x)])))
 
-(defn adjacent-squares-where
-  [b [x y] where]
-  (filter identity (map (fn [[x' y']] (let [v (get-in b [x' y'])] (and (where v) [x' y'])))
-                        (adjacent-squares [x y]))))
+(defn n  [[x y]] [(dec x) y])
+(defn s  [[x y]] [(inc x) y])
+(defn e  [[x y]] [x (inc y)])
+(defn w  [[x y]] [x (dec y)])
+(defn ne [[x y]] (comp n e))
+(defn nw [[x y]] (comp n w))
+(defn se [[x y]] (comp s e))
+(defn sw [[x y]] (comp s w))
+
+(defn path
+  "A lazy seq of coordinates starting at [x y] in direction (n, s, e, w, ne, nw, se, sw)."
+  [xy direction]
+  (cons xy (lazy-seq (path (direction xy) direction))))
+
+(defn explore
+  "Starting at [x y], explore direction until the goal color is found or the search is exhausted.
+  If successful, return a vector of the starting coordinates and a set of the intervening coordinates."
+  [board xy direction color]
+  (loop [p (drop 1 (path xy direction))
+         r []]
+    (when-let [v (and (seq p) (get-in board (first p)))]
+      (println (first p) v)
+      (condp = v
+        color [xy (set r)]
+        'e    nil
+        (recur (next p) (conj r (first p)))))))
+
+(defn empty-squares [b] (let [r (range (count b))] (for [x r, y r :when (= 'e (get-in b [x y]))] [x y])))
+
+
+(def sample '[[e e e e]
+              [e w b e]
+              [e b w e]
+              [e e e e]])
+
