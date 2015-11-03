@@ -64,3 +64,21 @@
   (fn []
     (letfn []
       )))
+
+(def good 
+  '[[A B C]
+    [B C A]
+    [C A B]])
+
+(def bad
+  '[[A B C]
+    [B D A]
+    [C A B]])
+
+(defn rotate [matrix] (vec (apply map vector matrix)))
+
+(defn latin-square?
+  [matrix]
+  (and (= (count (first matrix))
+          (count (set (first matrix))))
+       (apply = (into (map set matrix) (map set (rotate matrix))))))
