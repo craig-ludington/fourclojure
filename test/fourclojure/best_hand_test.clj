@@ -1,4 +1,4 @@
-(ns fourclojure.best-hand-test.clj
+(ns fourclojure.best-hand-test
   (:require [clojure.test :refer :all]
             [fourclojure.best-hand :refer :all]))
 
