@@ -75,15 +75,31 @@
     [B D A]
     [C A B]])
 
-(defn rotate [matrix] (vec (apply map vector matrix)))
+(defn square?
+  [matrix]
+  (let [c (count matrix)]
+    (and (<= 2 c)
+         (every? #(= c %) (map count matrix)))))
+
+(defn filled-in?
+  [matrix]
+  (and (not (empty? matrix))
+       (every? true? (map #(not-any? nil? %) matrix))))
+
+(defn rows-distinct?
+  [matrix]
+  (every? true? (map #(apply distinct? %) matrix)))
+
+(defn rotate
+  [matrix]
+  (vec (apply map vector matrix)))
 
 (defn latin-square?
   [matrix]
-  (and (= (count (first matrix))
-          (count (set (first matrix))))
+  (and (square? matrix)
+       (filled-in? matrix)
+       (rows-distinct? matrix)
        (apply = (into (map set matrix) (map set (rotate matrix))))))
-
-(defn matrix-is-square? [matrix] (apply = (map count matrix)))
 
 (defn max-width [matrix] (apply max (map count matrix)))
 
@@ -107,5 +123,4 @@
 
 (defn alignments
   [matrix]
-  {:post [(every? matrix-is-square? %)]}
   (apply cartesian-product (map (partial padded-rows (max-width matrix)) matrix)))
