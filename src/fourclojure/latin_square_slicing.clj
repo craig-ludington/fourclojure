@@ -82,3 +82,30 @@
   (and (= (count (first matrix))
           (count (set (first matrix))))
        (apply = (into (map set matrix) (map set (rotate matrix))))))
+
+(defn matrix-is-square? [matrix] (apply = (map count matrix)))
+
+(defn max-width [matrix] (apply max (map count matrix)))
+
+(defn pad-left [row n] (into (vec (repeat n nil)) row))
+(defn pad-right [row n] (into row (vec (repeat n nil))))
+(defn pad-to-width [row width offset] (pad-left (pad-right row (- width (count row) offset)) offset))
+
+;; Progressively shift row into width, padded with nil
+;; (padded-rows 4 [1 2]) => [[nil 1 2 nil] [1 2 nil nil] [nil nil 1 2]]
+(defn padded-rows [width row]
+  (vec (set (for [n (range (inc (- width (count row))))]
+              (pad-to-width row width n)))))
+
+;; http://stackoverflow.com/a/18262146/4113987
+(defn cartesian-product
+  ([] '(()))
+  ([xs & more]
+    (mapcat #(map (partial cons %)
+                  (apply cartesian-product more))
+            xs)))
+
+(defn alignments
+  [matrix]
+  {:post [(every? matrix-is-square? %)]}
+  (apply cartesian-product (map (partial padded-rows (max-width matrix)) matrix)))
