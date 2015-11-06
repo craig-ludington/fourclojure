@@ -57,23 +57,10 @@
 ;; should be returned. In the previous example the correct output of such
 ;; a function is {3 1, 2 1} and not {3 1, 2 3}.
 
-
-
-
 (def __
   (fn []
     (letfn []
       )))
-
-(def good 
-  '[[A B C]
-    [B C A]
-    [C A B]])
-
-(def bad
-  '[[A B C]
-    [B D A]
-    [C A B]])
 
 (defn square?
   [matrix]
@@ -121,6 +108,32 @@
                   (apply cartesian-product more))
             xs)))
 
+;; All combinations of row alignments, returned as square matrixes.  Rows may be padded with nil so the matrix won't be ragged.
 (defn alignments
   [matrix]
-  (apply cartesian-product (map (partial padded-rows (max-width matrix)) matrix)))
+  (vec (map vec (apply cartesian-product (map (partial padded-rows (max-width matrix)) matrix)))))
+
+(defn sub-matrix
+  [matrix [x y :as origin] size]
+  (vec (map vec
+            (partition size (for [x (range x (+ x size))
+                                  y (range y (+ y size))]
+                              (get-in matrix [x y]))))))
+
+;; Unique latin squares found in matrix
+(defn latin-squares
+  [matrix]
+  (into #{}
+        (vec (filter latin-square?
+                     (let [bound (max-width matrix)]
+                       (for [alignment (alignments matrix)
+                             size      (range 2 (inc bound))
+                             origin    (for [x (range 0 bound) y (range 0 bound)] [x y])]
+                         (sub-matrix alignment origin size)))))))
+
+
+(defn solve
+  [matrix]
+  (into {} (map (fn [[k v]] {k (count v)}) (group-by #(count (first %)) (latin-squares matrix)))))
+
+(def __ solve)
