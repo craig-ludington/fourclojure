@@ -58,82 +58,79 @@
 ;; a function is {3 1, 2 1} and not {3 1, 2 3}.
 
 (def __
-  (fn []
-    (letfn []
-      )))
+  (fn [matrix]
+    (letfn [
+            (square?
+              [matrix]
+              (let [c (count matrix)]
+                (and (<= 2 c)
+                     (every? #(= c %) (map count matrix)))))
 
-(defn square?
-  [matrix]
-  (let [c (count matrix)]
-    (and (<= 2 c)
-         (every? #(= c %) (map count matrix)))))
+            (filled-in?
+              [matrix]
+              (and (not (empty? matrix))
+                   (every? true? (map #(not-any? nil? %) matrix))))
 
-(defn filled-in?
-  [matrix]
-  (and (not (empty? matrix))
-       (every? true? (map #(not-any? nil? %) matrix))))
+            (rows-distinct?
+              [matrix]
+              (every? true? (map #(apply distinct? %) matrix)))
 
-(defn rows-distinct?
-  [matrix]
-  (every? true? (map #(apply distinct? %) matrix)))
+            (rotate
+              [matrix]
+              (vec (apply map vector matrix)))
 
-(defn rotate
-  [matrix]
-  (vec (apply map vector matrix)))
+            (latin-square?
+              [matrix]
+              (and (square? matrix)
+                   (filled-in? matrix)
+                   (rows-distinct? matrix)
+                   (apply = (into (map set matrix) (map set (rotate matrix))))))
 
-(defn latin-square?
-  [matrix]
-  (and (square? matrix)
-       (filled-in? matrix)
-       (rows-distinct? matrix)
-       (apply = (into (map set matrix) (map set (rotate matrix))))))
+            (max-width [matrix] (apply max (map count matrix)))
 
-(defn max-width [matrix] (apply max (map count matrix)))
+            (pad-left [row n] (into (vec (repeat n nil)) row))
+            (pad-right [row n] (into row (vec (repeat n nil))))
+            (pad-to-width [row width offset] (pad-left (pad-right row (- width (count row) offset)) offset))
 
-(defn pad-left [row n] (into (vec (repeat n nil)) row))
-(defn pad-right [row n] (into row (vec (repeat n nil))))
-(defn pad-to-width [row width offset] (pad-left (pad-right row (- width (count row) offset)) offset))
+            ;; Progressively shift row into width, padded with nil
+            ;; (padded-rows 4 [1 2]) => [[nil 1 2 nil] [1 2 nil nil] [nil nil 1 2]]
+            (padded-rows [width row]
+              (vec (set (for [n (range (inc (- width (count row))))]
+                          (pad-to-width row width n)))))
 
-;; Progressively shift row into width, padded with nil
-;; (padded-rows 4 [1 2]) => [[nil 1 2 nil] [1 2 nil nil] [nil nil 1 2]]
-(defn padded-rows [width row]
-  (vec (set (for [n (range (inc (- width (count row))))]
-              (pad-to-width row width n)))))
+            ;; http://stackoverflow.com/a/18262146/4113987
+            (cartesian-product
+              ([] '(()))
+              ([xs & more]
+               (mapcat #(map (partial cons %)
+                             (apply cartesian-product more))
+                       xs)))
 
-;; http://stackoverflow.com/a/18262146/4113987
-(defn cartesian-product
-  ([] '(()))
-  ([xs & more]
-    (mapcat #(map (partial cons %)
-                  (apply cartesian-product more))
-            xs)))
+            ;; All combinations of row alignments, returned as square matrixes.  Rows may be padded with nil so the matrix won't be ragged.
+            (alignments
+              [matrix]
+              (vec (map vec (apply cartesian-product (map (partial padded-rows (max-width matrix)) matrix)))))
 
-;; All combinations of row alignments, returned as square matrixes.  Rows may be padded with nil so the matrix won't be ragged.
-(defn alignments
-  [matrix]
-  (vec (map vec (apply cartesian-product (map (partial padded-rows (max-width matrix)) matrix)))))
+            (sub-matrix
+              [matrix [x y :as origin] size]
+              (vec (map vec
+                        (partition size (for [x (range x (+ x size))
+                                              y (range y (+ y size))]
+                                          (get-in matrix [x y]))))))
 
-(defn sub-matrix
-  [matrix [x y :as origin] size]
-  (vec (map vec
-            (partition size (for [x (range x (+ x size))
-                                  y (range y (+ y size))]
-                              (get-in matrix [x y]))))))
+            ;; Unique latin squares found in matrix
+            (latin-squares
+              [matrix]
+              (into #{}
+                    (vec (filter latin-square?
+                                 (let [bound (max-width matrix)]
+                                   (for [alignment (alignments matrix)
+                                         size      (range 2 (inc bound))
+                                         origin    (for [x (range 0 bound) y (range 0 bound)] [x y])]
+                                     (sub-matrix alignment origin size)))))))
+            ;; A map of latin square order to number found
+            (solve
+              [matrix]
+              (into {} (map (fn [[k v]] {k (count v)}) (group-by #(count (first %)) (latin-squares matrix)))))]
 
-;; Unique latin squares found in matrix
-(defn latin-squares
-  [matrix]
-  (into #{}
-        (vec (filter latin-square?
-                     (let [bound (max-width matrix)]
-                       (for [alignment (alignments matrix)
-                             size      (range 2 (inc bound))
-                             origin    (for [x (range 0 bound) y (range 0 bound)] [x y])]
-                         (sub-matrix alignment origin size)))))))
-
-
-(defn solve
-  [matrix]
-  (into {} (map (fn [[k v]] {k (count v)}) (group-by #(count (first %)) (latin-squares matrix)))))
-
-(def __ solve)
+      (solve matrix))))
