@@ -59,8 +59,7 @@
 
 (def __
   (fn [matrix]
-    (letfn [
-            (square?
+    (letfn [(square?
               [matrix]
               (let [c (count matrix)]
                 (and (<= 2 c)
@@ -113,24 +112,33 @@
 
             (sub-matrix
               [matrix [x y :as origin] size]
-              (vec (map vec
-                        (partition size (for [x (range x (+ x size))
-                                              y (range y (+ y size))]
-                                          (get-in matrix [x y]))))))
+              (vec (map #(subvec % y (+ y size)) (subvec matrix x (+ x size)))))
+            
+            ;; [[x y] size] ... ] for every origin in matrix that produces a square sub-matrix of any size
+            (origins
+              ([height width size] (for [x (range 0 (- height (dec size)))
+                                         y (range 0 (- width  (dec size)))]
+                                     [[x y] size]))
+              ([height width]      (reduce into [] (for [size (range 2 (inc (min height width)))]
+                                                     (origins height width size))))
+              ([matrix]            (origins (count matrix) (apply max (map count matrix)))))
 
+            (squares
+              [matrix]
+              (vec (map (fn [[origin size]] (sub-matrix matrix origin size)) (origins matrix))))
+
+            (all-squares
+              [matrix]
+              (reduce into [] (map squares (alignments matrix))))
+            
             ;; Unique latin squares found in matrix
             (latin-squares
               [matrix]
-              (into #{}
-                    (vec (filter latin-square?
-                                 (let [bound (max-width matrix)]
-                                   (for [alignment (alignments matrix)
-                                         size      (range 2 (inc bound))
-                                         origin    (for [x (range 0 bound) y (range 0 bound)] [x y])]
-                                     (sub-matrix alignment origin size)))))))
+              (into #{} (vec (filter latin-square? (all-squares matrix)))))
+
             ;; A map of latin square order to number found
             (solve
               [matrix]
               (into {} (map (fn [[k v]] {k (count v)}) (group-by #(count (first %)) (latin-squares matrix)))))]
-
       (solve matrix))))
+
