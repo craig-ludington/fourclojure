@@ -94,8 +94,7 @@
             ;; Progressively shift row into width, padded with nil
             ;; (padded-rows 4 [1 2]) => [[nil 1 2 nil] [1 2 nil nil] [nil nil 1 2]]
             (padded-rows [width row]
-              (vec (set (for [n (range (inc (- width (count row))))]
-                          (pad-to-width row width n)))))
+              (vec (set (map #(pad-to-width row width %) (range (inc (- width (count row))))))))
 
             ;; http://stackoverflow.com/a/18262146/4113987
             (cartesian-product
@@ -114,13 +113,11 @@
               [matrix [x y :as origin] size]
               (vec (map #(subvec % y (+ y size)) (subvec matrix x (+ x size)))))
             
-            ;; [[x y] size] ... ] for every origin in matrix that produces a square sub-matrix of any size
+            ;; [[x y] size] ... ] of every origin in matrix that produces a square sub-matrix of any size
             (origins
-              ([height width size] (for [x (range 0 (- height (dec size)))
-                                         y (range 0 (- width  (dec size)))]
-                                     [[x y] size]))
-              ([height width]      (reduce into [] (for [size (range 2 (inc (min height width)))]
-                                                     (origins height width size))))
+              ([height width size] (map #(vector (vec %) size) (cartesian-product (range 0 (- height (dec size)))
+                                                                                  (range 0 (- width  (dec size))))))
+              ([height width]      (reduce into [] (map #(origins height width %) (range 2 (inc (min height width))))))
               ([matrix]            (origins (count matrix) (apply max (map count matrix)))))
 
             (squares
